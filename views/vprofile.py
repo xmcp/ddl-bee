@@ -1,14 +1,14 @@
 from flask import *
 from mysql import mysql
 
-from sister import use_sister, SisterErrorMsg
+from sister import use_sister,SisterErrorMsg,SisterProceed
 import model
 import splashes
 import user_control
 
 bp=Blueprint('profile',__name__)
 
-@bp.route('/profile/register')
+@bp.route('/profile/register',methods=['POST'])
 @use_sister(enforce_auth=False,enforce_splash=False)
 def register():
     """
@@ -37,7 +37,7 @@ def register():
             update users set user_token=%s where unique_id=%s
         ''',[g.token,unique_id])
 
-        flash('%s，欢迎回来'%info['name'],'message')
+        flash('%s，欢迎回来'%info['name'],'success')
 
     else: # register new one
         reg=user_control.check_registration_code(regcode,info)
@@ -49,9 +49,11 @@ def register():
             values (%s, %s, %s, %s, %s, %s, '{}')
         ''',[g.token,unique_id,info['name'],reg['ring'],reg['splash_index'],info['remarks']+reg['remarks']])
 
-        flash('注册成功','message')
+        flash('注册成功','success')
 
-@bp.route('/profile/splash_callback')
+    raise SisterProceed()
+
+@bp.route('/profile/splash_callback',methods=['POST'])
 @use_sister(enforce_splash=False)
 def splash_callback():
     """
@@ -62,7 +64,10 @@ def splash_callback():
     splash_index=int(request.json['splash_index'])
     handin_data=request.json['handin']
 
-    assert g.user.splash_index==splash_index, 'not in current splash'
+    if g.user.splash_index!=splash_index:
+        raise SisterErrorMsg('not in current splash screen')
     handler=splashes.SplashHandler.get_handler_by_index(splash_index)
     assert handler is not None, 'no handler for this splash'
-    return handler.handin(g.user.uid,handin_data)
+
+    handler.handin(g.user.uid,handin_data)
+    raise SisterProceed()

@@ -27,6 +27,10 @@ class SplashHandler:
     def complete(self,uid):
         _set_splash_index(uid,self.splash_index+1)
 
+    @staticmethod
+    def flash(msg,cat='message'):
+        flash(msg,cat)
+
     def handout(self,uid):
         raise NotImplementedError('should override SplashHandler.handout in #%d'%self.splash_index)
 

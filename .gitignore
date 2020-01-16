@@ -4,3 +4,4 @@ __pycache__/
 
 user_control.py
 config.py
+*.http

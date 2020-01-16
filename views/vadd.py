@@ -16,9 +16,10 @@ def add_zone():
     names=request.json['names']
 
     z_o,_=g.user.zones(need_list=False)
-    z_o=z_o[None]
-    if len(z_o)>=current_app.config['LIMIT_ZONES']:
+    z_o=z_o.get(None,[])
+    if len(z_o)+len(names)>current_app.config['LIMIT_ZONES']:
         flash('课程数量超出限制','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()
@@ -37,15 +38,16 @@ def add_project():
     """
     INPUT:
         names: list of str
-        zid: int
+        parent_id: int
     """
     names=request.json['names']
-    zid=int(request.json['zid'])
+    zid=int(request.json['parent_id'])
 
     p_o,_=g.user.projects(zid,need_list=False)
-    p_o=p_o[zid]
-    if len(p_o)>=current_app.config['LIMIT_PROJECTS_PER_ZONE']:
+    p_o=p_o.get(zid,[])
+    if len(p_o)+len(names)>current_app.config['LIMIT_PROJECTS_PER_ZONE']:
         flash('项目数量超出限制','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()
@@ -64,15 +66,16 @@ def add_task():
     """
     INPUT:
         names: list of str
-        pid: int
+        parent_id: int
     """
     names=request.json['names']
-    pid=int(request.json['pid'])
+    pid=int(request.json['parent_id'])
 
     t_o,_=g.user.tasks(pid,need_list=False)
-    t_o=t_o[pid]
-    if len(t_o)>=current_app.config['LIMIT_TASKS_PER_PROJECT']:
+    t_o=t_o.get(pid,[])
+    if len(t_o)+len(names)>current_app.config['LIMIT_TASKS_PER_PROJECT']:
         flash('任务数量超出限制','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()

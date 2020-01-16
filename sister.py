@@ -1,16 +1,21 @@
 from flask import *
+from flask_cors import cross_origin
+
 from mysql import mysql
 from functools import wraps
-
-import model
-import splashes
 
 class SisterErrorMsg(Exception):
     def __init__(self,msg):
         self.msg=msg
 
+class SisterProceed(Exception):
+    pass
+
+import model
+import splashes
+
 VERSION='VERSION'
-NOTIFS=[['本项目正在测试','message']]
+NOTIFS=[['message','本项目正在测试']]
 
 def _backend_value():
     return {
@@ -19,36 +24,44 @@ def _backend_value():
         'sticky_msgs': NOTIFS,
     }
 
+def get_user_from_token(token):
+    cur=mysql.get_db().cursor()
+    cur.execute(
+        'select uid,name,ring,splash_index,settings from users where user_token=%s',
+        [token]
+    )
+    res=cur.fetchone()
+    if res:
+        uid,name,ring,splash_index,settings=res
+        return model.User(uid,name,ring,splash_index,settings)
+    else:
+        return None
+
 def use_sister(enforce_auth=True, enforce_splash=True):
     """ Decorator for view functions.
     SHOULE BE USED FOR EVERY VIEW FUNCTION!
 
     - Provides g.user and authentication with `user_token` arg
+    - Provides g.action_success
     - Deals with exceptions
     - Provides splash control
     - Commits database if no error
     - Adds `backend`, `user`, `error` key in response
     - Provides default build_sister_response if view function returns None
     """
+
     def decorator(f):
         @wraps(f)
+        @cross_origin()
         def decorated(*args,**kwargs):
             g.user=None
-            db=mysql.get_db()
+            g.action_success=True
 
             # check auth and init g.user
 
             g.token=request.args.get('user_token',None)
             if g.token:
-                cur=db.cursor()
-                cur.execute(
-                    'select uid,name,ring,splash_index,settings from users where user_token=%s',
-                    [g.token]
-                )
-                res=cur.fetchone()
-                if res:
-                    uid,name,ring,splash_index,settings=res
-                    g.user=model.User(uid,name,ring,splash_index,settings)
+                g.user=get_user_from_token(g.token)
 
             if g.user is None and enforce_auth:
                 return jsonify({
@@ -80,7 +93,10 @@ def use_sister(enforce_auth=True, enforce_splash=True):
                 # check for default sister response
 
                 if res is None:
-                    res=g.user.build_sister_response()
+                    if g.user:
+                        res=g.user.build_sister_response()
+                    else:
+                        raise Exception('no available response')
 
             # error handling
 
@@ -88,6 +104,13 @@ def use_sister(enforce_auth=True, enforce_splash=True):
                 return jsonify({
                     'error': 'SISTER_ERROR',
                     'error_msg': e.msg,
+                    'backend': _backend_value(),
+                })
+            except SisterProceed:
+                mysql.get_db().commit()
+                return jsonify({
+                    'error': 'PROCEED',
+                    'error_msg': '操作完成，请刷新页面',
                     'backend': _backend_value(),
                 })
             except Exception as e:
@@ -101,11 +124,12 @@ def use_sister(enforce_auth=True, enforce_splash=True):
             # post processing
 
             else:
-                db.commit()
+                mysql.get_db().commit()
                 return jsonify({
                     'error': None,
                     'backend': _backend_value(),
                     'user': None if g.user is None else g.user.user_info(),
+                    'action_success': g.action_success,
                     **res,
                 })
 

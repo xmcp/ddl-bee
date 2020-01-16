@@ -23,6 +23,7 @@ def reorder_zone():
 
     if not check_same(z_o,zids):
         flash('课程发生变化','error')
+        g.action_success=False
         return
 
     model.update_linkedlist(z_o,zids,'zones')
@@ -43,6 +44,7 @@ def reorder_project():
 
     if not check_same(p_o,pids):
         flash('项目发生变化','error')
+        g.action_success=False
         return
 
     model.update_linkedlist(p_o,pids,'projects')
@@ -63,6 +65,7 @@ def reorder_task():
 
     if not check_same(t_o,tids):
         flash('任务发生变化','error')
+        g.action_success=False
         return
 
     model.update_linkedlist(t_o,tids,'tasks')

@@ -12,11 +12,9 @@ class SplashAlphaTestAgreement(SplashHandler):
 
     def handin(self,uid,args):
         if not args.get('agree',None):
-            raise SisterErrorMsg('请同意注意事项')
+            self.flash('请同意注意事项','error')
         else:
             self.complete(uid)
-            return {
-                'passed': True,
-            }
+            self.flash('完成','success')
 
 SplashAlphaTestAgreement()

@@ -24,7 +24,7 @@ def sort_linkedlist(ll,fn_recover,*,idx_id,idx_next,idx_group,attrs):
         try:
             # get first item
             first_item_candidates=set(ll_dict.keys())
-            for item in ll:
+            for item in ll_dict.values():
                 if item[idx_next] is not None:
                     first_item_candidates.remove(item[idx_next])
             assert len(first_item_candidates)==1, '%d first candidates'%len(first_item_candidates)
@@ -32,7 +32,7 @@ def sort_linkedlist(ll,fn_recover,*,idx_id,idx_next,idx_group,attrs):
             # get whole list
             nxt_key=next(iter(first_item_candidates)) # its only item
             sorted_ids=[]
-            for _ in range(len(ll)):
+            for _ in range(len(ll_dict)):
                 nxt_item=ll_dict[nxt_key]
                 sorted_ids.append(nxt_key)
                 nxt_key=nxt_item[idx_next]
@@ -156,7 +156,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=[None,None,'zid','name'] if need_list else None,
+            attrs=[None,None,'parent_id','name'] if need_list else None,
         )
 
     def tasks(self,pid=None,*,need_list=True):
@@ -191,7 +191,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=[None,None,'pid','name','status','due','completeness'] if need_list else None,
+            attrs=[None,None,'parent_id','name','status','due','completeness'] if need_list else None,
         )
 
     def build_sister_response(self):

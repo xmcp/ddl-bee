@@ -11,10 +11,10 @@ bp=Blueprint('update',__name__)
 def update_zone():
     """
     INPUT:
-        zid: int
+        id: int
         name: str
     """
-    zid=int(request.json['zid'])
+    zid=int(request.json['id'])
     name=str(request.json['name'])
 
     cur=mysql.get_db().cursor()
@@ -27,10 +27,10 @@ def update_zone():
 def update_project():
     """
     INPUT:
-        pid: int
+        id: int
         name: str
     """
-    pid=int(request.json['pid'])
+    pid=int(request.json['id'])
     name=str(request.json['name'])
 
     cur=mysql.get_db().cursor()
@@ -43,15 +43,15 @@ def update_project():
 def update_task():
     """
     INPUT:
-        tid: int
+        id: int
         name: str
         status: str
         due: int or null
     """
-    tid=int(request.json['tid'])
+    tid=int(request.json['id'])
     name=str(request.json['name'])
     status=str(request.json['status'])
-    assert status in ['placeholder','active']
+    assert status in ['placeholder','active'], 'invalid status'
     due=request.json['due']
     if due is not None:
         due=int(due)
@@ -66,14 +66,31 @@ def update_task():
 def update_complete():
     """
     INPUT:
-        tid: int
+        id: int
         completeness: str
     """
-    tid=int(request.json['tid'])
+    tid=int(request.json['id'])
     completeness=str(request.json['completeness'])
-    assert completeness in ['todo','done','highlight','ignored']
+    assert completeness in ['todo','done','highlight','ignored'], 'invalid completeness'
 
     cur=mysql.get_db().cursor()
     cur.execute('''
         replace into completes (uid, tid, completeness) values (%s, %s, %s) 
     ''',[g.user.uid,tid,completeness])
+
+@bp.route('/update/task_direct_done',methods=['POST'])
+@use_sister()
+def update_task_direct_done():
+    """
+    INPUT:
+        id: int
+    """
+    tid=int(request.json['id'])
+
+    cur=mysql.get_db().cursor()
+    cur.execute('''
+        update tasks set status='active', due=null where tid=%s and uid=%s
+    ''',[tid,g.user.uid])
+    cur.execute('''
+        replace into completes (uid, tid, completeness) values (%s, %s, 'done') 
+    ''',[g.user.uid,tid])

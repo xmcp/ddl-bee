@@ -11,14 +11,15 @@ bp=Blueprint('delete',__name__)
 def delete_zone():
     """
     INPUT:
-        zid: int
+        id: int
     """
-    zid=int(request.json['zid'])
+    zid=int(request.json['id'])
 
-    z_o,_=g.users.zones(need_list=False)
+    z_o,_=g.user.zones(need_list=False)
     z_o=z_o[None]
     if zid not in z_o:
-        flash('课程不存在')
+        flash('课程不存在','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()
@@ -35,16 +36,17 @@ def delete_zone():
 def delete_project():
     """
     INPUT:
-        pid: int
-        zid: int
+        id: int
+        parent_id: int
     """
-    pid=int(request.json['pid'])
-    zid=int(request.json['zid'])
+    pid=int(request.json['id'])
+    zid=int(request.json['parent_id'])
 
-    p_o,_=g.users.projects(zid,need_list=False)
+    p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o[zid]
     if pid not in p_o:
-        flash('项目不存在')
+        flash('项目不存在','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()
@@ -61,16 +63,17 @@ def delete_project():
 def delete_task():
     """
     INPUT:
-        tid: int
-        pid: int
+        id: int
+        parent_id: int
     """
-    tid=int(request.json['tid'])
-    pid=int(request.json['pid'])
+    tid=int(request.json['id'])
+    pid=int(request.json['parent_id'])
 
-    t_o,_=g.users.tasks(pid,need_list=False)
+    t_o,_=g.user.tasks(pid,need_list=False)
     t_o=t_o[pid]
     if tid not in t_o:
-        flash('任务不存在')
+        flash('任务不存在','error')
+        g.action_success=False
         return
 
     cur=mysql.get_db().cursor()
