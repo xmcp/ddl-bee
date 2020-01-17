@@ -14,9 +14,9 @@ def check_same(a,b):
 def reorder_zone():
     """
     INPUT:
-        zids: list of int
+        order: list of int
     """
-    zids=request.json['zids']
+    zids=request.json['order']
 
     z_o,_=g.user.zones(need_list=False)
     z_o=z_o[None]
@@ -33,11 +33,11 @@ def reorder_zone():
 def reorder_project():
     """
     INPUT:
-        zid: int
-        pids: list of int
+        parent_id: int
+        order: list of int
     """
-    zid=int(request.json['zid'])
-    pids=request.json['pids']
+    zid=int(request.json['parent_id'])
+    pids=request.json['order']
 
     p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o[zid]
@@ -54,14 +54,14 @@ def reorder_project():
 def reorder_task():
     """
     INPUT:
-        pid: int
-        tids: list of int
+        parent_id: int
+        order: list of int
     """
-    pid=int(request.json['pid'])
-    tids=request.json['tids']
+    pid=int(request.json['parent_id'])
+    tids=request.json['order']
 
     t_o,_=g.user.tasks(pid,need_list=False)
-    t_o=t_o[tids]
+    t_o=t_o[pid]
 
     if not check_same(t_o,tids):
         flash('任务发生变化','error')

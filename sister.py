@@ -1,6 +1,7 @@
 from flask import *
 from flask_cors import cross_origin
 
+import os
 from mysql import mysql
 from functools import wraps
 
@@ -14,8 +15,24 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-VERSION='VERSION'
-NOTIFS=[['message','本项目正在测试']]
+SISTER_API_VER='1'
+
+NOTIFS=[
+    ['message','Alpha测试期间请勿提交任何隐私或重要信息，否则可能泄露或丢失。目前课程、每个课程的项目、每个项目的任务数量限制均为20。']
+]
+
+def get_git_revision():
+    try:
+        with open('.git/HEAD') as head:
+            ref = head.readline().split(' ')[-1].strip()
+
+        with open(os.path.join('.git',ref)) as git_hash:
+            return git_hash.readline().strip()
+    except Exception as e:
+        print('! get version from git failed:',type(e),e)
+        return '???'
+
+VERSION=get_git_revision()[:6]
 
 def _backend_value():
     return {
@@ -27,7 +44,7 @@ def _backend_value():
 def get_user_from_token(token):
     cur=mysql.get_db().cursor()
     cur.execute(
-        'select uid,name,ring,splash_index,settings from users where user_token=%s',
+        'select uid,name,ring,splash_index,settings from users where user_token=%s and ring<5',
         [token]
     )
     res=cur.fetchone()
@@ -41,6 +58,7 @@ def use_sister(enforce_auth=True, enforce_splash=True):
     """ Decorator for view functions.
     SHOULE BE USED FOR EVERY VIEW FUNCTION!
 
+    - Checks api version
     - Provides g.user and authentication with `user_token` arg
     - Provides g.action_success
     - Deals with exceptions
@@ -54,6 +72,16 @@ def use_sister(enforce_auth=True, enforce_splash=True):
         @wraps(f)
         @cross_origin()
         def decorated(*args,**kwargs):
+
+            # check api version
+
+            client_api_ver=request.args.get('sister_ver',None)
+            if client_api_ver!=SISTER_API_VER:
+                return jsonify({
+                    'error': 'SISTER_VER_MISMATCH',
+                    'error_msg': 'API版本不兼容，请尝试刷新页面',
+                })
+
             g.user=None
             g.action_success=True
 

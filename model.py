@@ -125,7 +125,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=None,
-            attrs=[None,None,'name'] if need_list else None,
+            attrs=['id',None,'name'] if need_list else None,
         )
 
     def projects(self,zid=None,*,need_list=True):
@@ -156,7 +156,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=[None,None,'parent_id','name'] if need_list else None,
+            attrs=['id',None,'parent_id','name'] if need_list else None,
         )
 
     def tasks(self,pid=None,*,need_list=True):
@@ -191,7 +191,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=[None,None,'parent_id','name','status','due','completeness'] if need_list else None,
+            attrs=['id',None,'parent_id','name','status','due','completeness'] if need_list else None,
         )
 
     def build_sister_response(self):

@@ -23,7 +23,12 @@ def register():
 
     cur=mysql.get_db().cursor()
 
-    info=user_control.get_info_from_user_token(g.token)
+    try:
+        info=user_control.get_info_from_user_token(g.token)
+    except Exception as e:
+        current_app.logger.exception('get info from user token failed')
+        raise SisterErrorMsg('查询用户信息失败')
+
     if info is None:
         raise SisterErrorMsg('用户不存在')
 
@@ -40,14 +45,19 @@ def register():
         flash('%s，欢迎回来'%info['name'],'success')
 
     else: # register new one
-        reg=user_control.check_registration_code(regcode,info)
+        try:
+            reg=user_control.check_registration_code(regcode,info)
+        except Exception as e:
+            current_app.logger.exception('check registration code failed')
+            raise SisterErrorMsg('检查注册条件失败')
+
         if reg['error'] is not None:
             raise SisterErrorMsg(reg['error'])
 
         cur.execute('''
             insert into users (user_token, unique_id, name, ring, splash_index, remarks, settings)
             values (%s, %s, %s, %s, %s, %s, '{}')
-        ''',[g.token,unique_id,info['name'],reg['ring'],reg['splash_index'],info['remarks']+reg['remarks']])
+        ''',[g.token,unique_id,info['name'],reg['ring'],reg['splash_index'],reg['remarks']])
 
         flash('注册成功','success')
 
