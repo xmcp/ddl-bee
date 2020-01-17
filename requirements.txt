@@ -2,3 +2,4 @@ flask
 flask-cors
 flask-mysql
 flask-compress
+requests
