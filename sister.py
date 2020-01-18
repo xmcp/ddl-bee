@@ -15,7 +15,7 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-SISTER_API_VER='1'
+SISTER_API_VER='1a'
 
 NOTIFS=[
     ['message','Alpha测试期间请勿提交任何隐私或重要信息，否则可能泄露或丢失。目前课程、每个课程的项目、每个项目的任务数量限制均为20。']
@@ -116,6 +116,7 @@ def use_sister(enforce_auth=True, enforce_splash=True):
                         'backend':_backend_value(),
                         'splash': {
                             'index': handler.splash_index,
+                            'type': handler.splash_type,
                             'handout': handler.handout(g.user.uid),
                         },
                     })

@@ -17,12 +17,13 @@ class SplashHandler:
         """
         return cls._registered_handlers.get(splash_index,None)
 
-    def __init__(self,splash_index,splash_name):
+    def __init__(self,splash_index,splash_name,splash_type):
         if SplashHandler._registered_handlers.get(splash_index,self) is not self:
             raise ValueError('splash index already registered to another handler')
         SplashHandler._registered_handlers[splash_index]=self
         self.splash_index=splash_index
         self.splash_name=splash_name
+        self.splash_type=splash_type
 
     def complete(self,uid):
         _set_splash_index(uid,self.splash_index+1)
