@@ -44,7 +44,7 @@ def _backend_value():
 def get_user_from_token(token):
     cur=mysql.get_db().cursor()
     cur.execute(
-        'select uid,name,ring,splash_index,settings from users where user_token=%s and ring<5',
+        'select uid,name,ring,splash_index,settings from users where user_token=%s',
         [token]
     )
     res=cur.fetchone()
@@ -91,12 +91,19 @@ def use_sister(enforce_auth=True, enforce_splash=True):
             if g.token:
                 g.user=get_user_from_token(g.token)
 
-            if g.user is None and enforce_auth:
-                return jsonify({
-                    'error': 'AUTH_REQUIRED',
-                    'error_msg': '需要登录',
-                    'backend': _backend_value(),
-                })
+            if enforce_auth:
+                if g.user is None:
+                    return jsonify({
+                        'error': 'AUTH_REQUIRED',
+                        'error_msg': '需要登录',
+                        'backend': _backend_value(),
+                    })
+                elif g.user.ring>=5:
+                    return jsonify({
+                        'error':'SISTER_ERROR',
+                        'error_msg':'你号没了',
+                        'backend':_backend_value(),
+                    })
 
             # check splash
 
