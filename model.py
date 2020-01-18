@@ -176,7 +176,7 @@ class User:
             cur.execute('''
                 select count(*) from projects where uid=%s and pid=%s
             ''',[self.uid,pid])
-            assert cur.fetchone()[0]>0, '项目不存在'
+            assert cur.fetchone()[0]>0, '类别不存在'
 
             cur.execute('''
                 select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo') from tasks

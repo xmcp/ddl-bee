@@ -46,7 +46,7 @@ def add_project():
     p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o.get(zid,[])
     if len(p_o)+len(names)>current_app.config['LIMIT_PROJECTS_PER_ZONE']:
-        flash('项目数量超出限制','error')
+        flash('类别数量超出限制','error')
         g.action_success=False
         return
 

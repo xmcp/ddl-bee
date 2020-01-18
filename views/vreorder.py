@@ -43,7 +43,7 @@ def reorder_project():
     p_o=p_o[zid]
 
     if not check_same(p_o,pids):
-        flash('项目发生变化','error')
+        flash('类别发生变化','error')
         g.action_success=False
         return
 

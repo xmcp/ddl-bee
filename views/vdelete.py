@@ -45,7 +45,7 @@ def delete_project():
     p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o[zid]
     if pid not in p_o:
-        flash('项目不存在','error')
+        flash('类别不存在','error')
         g.action_success=False
         return
 
