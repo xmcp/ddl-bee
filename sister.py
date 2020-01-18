@@ -32,7 +32,7 @@ def get_git_revision():
         print('! get version from git failed:',type(e),e)
         return '???'
 
-VERSION=get_git_revision()[:6]
+VERSION=os.environ.get('BEE_ENV_NAME','')+get_git_revision()[:6]
 
 def _backend_value():
     return {

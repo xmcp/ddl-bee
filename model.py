@@ -65,7 +65,7 @@ def update_linkedlist(before,after,table_name):
 
     cur=mysql.get_db().cursor()
     # noinspection SqlWithoutWhere
-    sql='update %s set next_%s=%%s where %s=%%s and uid=%s'%(table_name,key_name,key_name,g.user.uid)
+    sql='update %s set next_%s=%%s where %s=%%s and uid=%%s'%(table_name,key_name,key_name)
 
     before=([] if before is None else before)+[None]
     after=list(after)+[None]
@@ -74,7 +74,7 @@ def update_linkedlist(before,after,table_name):
     chgs=[]
     for i in range(len(after)-1):
         if after[i+1]!=before_nxts.get(after[i],...):
-            chgs.append([after[i+1],after[i]])
+            chgs.append([after[i+1],after[i],g.user.uid])
     if chgs:
         cur.executemany(sql,chgs)
 

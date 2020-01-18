@@ -1,8 +1,8 @@
 from flask import *
 from mysql import mysql
+import json
 
 from sister import use_sister,SisterErrorMsg,SisterProceed
-import model
 import splashes
 import user_control
 
@@ -54,6 +54,9 @@ def register():
         if reg['error'] is not None:
             raise SisterErrorMsg(reg['error'])
 
+        if reg['splash_index'] is None:
+            reg['splash_index']=current_app.config['INITIAL_SPLASH_INDEX']
+
         cur.execute('''
             insert into users (user_token, unique_id, name, ring, splash_index, remarks, settings)
             values (%s, %s, %s, %s, %s, %s, '{}')
@@ -80,4 +83,39 @@ def splash_callback():
     assert handler is not None, 'no handler for this splash'
 
     handler.handin(g.user.uid,handin_data)
+    raise SisterProceed()
+
+@bp.route('/profile/update_settings',methods=['POST'])
+@use_sister()
+def update_settings():
+    """
+    IPNUT:
+        settings: json object
+    """
+    settings_obj=request.json['settings']
+    settings_str=json.dumps(settings_obj)
+
+    if len(settings_str)>current_app.config['SETTINGS_MAX_BYTES']:
+        flash('设置大小超过限制','error')
+        g.action_success=False
+        return
+
+    cur=mysql.get_db().cursor()
+    cur.execute('''
+        update users set settings=%s where uid=%s
+    ''',[settings_str,g.user.uid])
+    raise SisterProceed()
+
+@bp.route('/profile/reset_splash_index',methods=['POST'])
+@use_sister()
+def reset_splash_index():
+    """
+    INPUT: none
+    """
+    cur=mysql.get_db().cursor()
+    cur.execute('''
+        update users set splash_index=%s where uid=%s
+    ''',[current_app.config['INITIAL_SPLASH_INDEX'],g.user.uid])
+
+    flash('已重置欢迎页面进度','success')
     raise SisterProceed()

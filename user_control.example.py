@@ -20,7 +20,7 @@ def check_registration_code(regcode,userinfo):
 
     :param regcode: registration code the user inputted
     :param userinfo: return value from `get_info_from_user_token` function
-    :return: {'error': 'reject reason'} or {'error': None, 'remarks': '...', 'ring': int, 'splash_index': int}
+    :return: {'error': 'reject reason'} or {'error': None, 'remarks': '...', 'ring': int, 'splash_index': int or None for INITIAL_SPLASH_INDEX}
     """
     if regcode!='42' or userinfo['name']=='小龙虾':
         return {
@@ -31,5 +31,5 @@ def check_registration_code(regcode,userinfo):
             'error': None,
             'remarks': 'regcode is %r'%regcode,
             'ring': 3,
-            'splash_index': 0,
+            'splash_index': None,
         }
