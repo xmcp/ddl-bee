@@ -1,8 +1,9 @@
 /.idea/
 __pycache__/
 *.pyc
+*.http
 
 user_control.py
 config.py
 wsgi.ini
-*.http
+splashes/__init__.py
