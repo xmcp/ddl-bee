@@ -1,3 +1,4 @@
+import functools
 import json
 from flask import *
 from mysql import mysql
@@ -111,7 +112,7 @@ class User:
     def zones(self,*,need_list=True):
         """ Get zones and their ordering.
         :param need_list: False if second ret val is unnecessary (will return None)
-        :return: {None: [zid, ...]}, {zid: {'name'}, ...}
+        :return: {None: [zid, ...]}, {zid: {'name','id'}, ...}
         """
         cur=mysql.get_db().cursor()
         cur.execute('''
@@ -132,22 +133,17 @@ class User:
         """ Get projects and their ordering.
         :param zid: specify zone id to retrive, None to retrive all
         :param need_list: False if second ret val is unnecessary (will return None)
-        :return: {zid: [pid, ...]}, {pid: {'name','zid'}, ...}
+        :return: {zid: [pid, ...]}, {pid: {'name','id',...}, ...}
         """
         cur=mysql.get_db().cursor()
-        if zid is None:
-            cur.execute('''
-                select pid,next_pid,zid,name from projects where uid=%s
-            ''',[self.uid])
-        else:
-            cur.execute('''
-                select count(*) from zones where uid=%s and zid=%s
-            ''',[self.uid,zid])
-            assert cur.fetchone()[0]>0, '课程不存在'
+        sql='''
+            select pid,next_pid,zid,name,extpid,share_hash from projects where uid=%s
+        '''
 
-            cur.execute('''
-                select pid,next_pid,zid,name from projects where uid=%s and zid=%s
-            ''',[self.uid,zid])
+        if zid is None:
+            cur.execute(sql,[self.uid])
+        else:
+            cur.execute(sql+' and zid=%s',[self.uid,zid])
 
         def recover(_group,ll_dict):
             update_linkedlist(None,ll_dict.keys(),'projects')
@@ -156,33 +152,42 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=['id',None,'parent_id','name'] if need_list else None,
+            attrs=['id',None,'parent_id','name','_extpid','share_hash'] if need_list else None,
         )
 
-    def tasks(self,pid=None,*,need_list=True):
+    def tasks(self,pid=None,*,need_list=True,bypass_permission=False):
         """ Get tasks and their ordering.
-        :param pid: specify project id to retrive, None to retrive all
+        :param pid: int or list (for multiple). specify project id to retrive, None to retrive all
         :param need_list: False if second ret val is unnecessary (will return None)
-        :return: {pid: [tid, ...]}, {tid: {'name','pid','status','due'}, ...}
+        :param bypass_permission: use with `pid`. set to True to remove limit of only fetching tasks of current user
+        :return: {pid: [tid, ...]}, {tid: {'name','id','status','due'...}, ...}
         """
         cur=mysql.get_db().cursor()
-        if pid is None:
-            cur.execute('''
-                select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo') from tasks
-                left join completes on tasks.tid=completes.tid and tasks.uid=completes.uid
-                where tasks.uid=%s
-            ''',[self.uid])
-        else:
-            cur.execute('''
-                select count(*) from projects where uid=%s and pid=%s
-            ''',[self.uid,pid])
-            assert cur.fetchone()[0]>0, '类别不存在'
+        sql='''
+            select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo'),completes.update_timestamp from tasks
+            left join completes on tasks.tid=completes.tid and completes.uid=%s
+            where 1 
+        '''
+        sql_args=[g.user.uid]
 
-            cur.execute('''
-                select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo') from tasks
-                left join completes on tasks.tid=completes.tid and tasks.uid=completes.uid
-                where tasks.uid=%s and tasks.pid=%s
-            ''',[self.uid,pid])
+        if bypass_permission and pid is None:
+            raise ValueError('bypassing permission without pid')
+
+        if pid is not None:
+            if isinstance(pid,list):
+                if not pid:
+                    return {}, {}
+                sql+=' and tasks.pid in %s'
+                sql_args.append(pid)
+            else:
+                sql+=' and tasks.pid=%s'
+                sql_args.append(pid)
+
+        if not bypass_permission:
+            sql+=' and tasks.uid=%s'
+            sql_args.append(self.uid)
+
+        cur.execute(sql,sql_args)
 
         def recover(_group,ll_dict):
             update_linkedlist(None,ll_dict.keys(),'tasks')
@@ -191,8 +196,52 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=['id',None,'parent_id','name','status','due','completeness'] if need_list else None,
+            attrs=['id',None,'parent_id','name','status','due','completeness','complete_timestamp'] if need_list else None,
         )
+
+    def tasks_external(self,pid_map):
+        """ Get external tasks and their ordering.
+        :param pid_map: {original_pid: external_pid, ...}
+        :return: {original_pid: [tid, ...]}, {tid: {'name','id',...}, ...}
+        """
+        ret_o={}
+        ret_li={}
+        rev_pid_map={v:k for k,v in pid_map.items()}
+
+        t_o,t_li=self.tasks(list(pid_map.values()),bypass_permission=True)
+
+        for orig_pid,ext_pid in pid_map.items():
+            ret_o[orig_pid]=t_o.get(ext_pid,[])
+
+        for tid,item in t_li.items():
+            item['parent_id']=rev_pid_map[item['parent_id']]
+            ret_li[tid]=item
+
+        return ret_o,ret_li
+
+    @functools.lru_cache(1024)
+    def check_zone(self,zid):
+        """ Check whether the user have control of the given zid.
+        :param zid: int
+        :return: bool
+        """
+        cur=mysql.get_db().cursor()
+        cur.execute('''
+            select count(*) from zones where zid=%s and uid=%s
+        ''',[zid,self.uid])
+        return cur.fetchone()[0]!=0
+
+    @functools.lru_cache(1024)
+    def check_project(self,pid):
+        """ Check whether the user have control of the given pid.
+        :param pid: int
+        :return: bool
+        """
+        cur=mysql.get_db().cursor()
+        cur.execute('''
+            select count(*) from projects where pid=%s and uid=%s
+        ''',[pid,self.uid])
+        return cur.fetchone()[0]!=0
 
     def build_sister_response(self):
         """ Generate value that will be passed to phoenix.
@@ -201,6 +250,11 @@ class User:
         z_o,z_li=self.zones()
         p_o,p_li=self.projects()
         t_o,t_li=self.tasks()
+
+        ext_projs={pid:item['_extpid'] for pid,item in p_li.items() if item['_extpid']}
+        tex_o,tex_li=self.tasks_external(ext_projs)
+        t_o.update(tex_o)
+        t_li.update(tex_li)
 
         return {
             'zone_order': z_o.get(None,[]),
@@ -212,7 +266,8 @@ class User:
 
             'project': {pid: {
                 'task_order':t_o.get(pid,[]),
-                **item,
+                'external': item['_extpid'] is not None,
+                **{k:v for k,v in item.items() if not k.startswith('_')},
             } for pid,item in p_li.items()},
 
             'task': t_li,

@@ -9,7 +9,7 @@ import user_control
 bp=Blueprint('profile',__name__)
 
 @bp.route('/profile/register',methods=['POST'])
-@use_sister(enforce_auth=False,enforce_splash=False)
+@use_sister(require_ring=None,enforce_splash=False)
 def register():
     """
     ARGS:

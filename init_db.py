@@ -32,11 +32,15 @@ CREATE TABLE `projects` (
   `name` varchar(80) NOT NULL,
   `uid` int NOT NULL,
   `zid` int NOT NULL,
+  `extpid` int DEFAULT NULL,
+  `share_hash` varchar(60) DEFAULT NULL,
   PRIMARY KEY (`pid`),
   KEY `k_zid` (`zid`),
   KEY `k_uid` (`uid`),
+  UNIQUE KEY `k_share_hash` (`share_hash`),
   CONSTRAINT `fk_p_uid` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_p_zid` FOREIGN KEY (`zid`) REFERENCES `zones` (`zid`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_p_zid` FOREIGN KEY (`zid`) REFERENCES `zones` (`zid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_p_extpid` FOREIGN KEY (`extpid`) REFERENCES `projects` (`pid`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ''',
     '''
 CREATE TABLE `tasks` (
@@ -58,6 +62,7 @@ CREATE TABLE `completes` (
   `uid` int NOT NULL,
   `tid` int NOT NULL,
   `completeness` enum('todo','done','highlight','ignored') NOT NULL DEFAULT 'todo',
+  `update_timestamp` bigint NOT NULL,
   PRIMARY KEY (`uid`,`tid`),
   KEY `k_tid` (`tid`),
   KEY `k_uid` (`uid`),

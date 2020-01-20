@@ -15,10 +15,10 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-SISTER_API_VER='1a'
+SISTER_API_VER='2'
 
 NOTIFS=[
-    ['message','Alpha测试期间请勿提交任何隐私或重要信息，否则可能泄露或丢失。目前课程、每个课程的类别、每个类别的任务数量限制均为20。']
+    ['message','<b>Alpha测试期间请勿提交任何隐私或重要信息</b>，否则可能泄露或丢失。目前课程、每个课程的类别、每个类别的任务数量限制均为20。']
 ]
 
 def get_git_revision():
@@ -54,9 +54,11 @@ def get_user_from_token(token):
     else:
         return None
 
-def use_sister(enforce_auth=True, enforce_splash=True):
+def use_sister(enforce_splash=True, require_ring=4):
     """ Decorator for view functions.
     SHOULE BE USED FOR EVERY VIEW FUNCTION!
+    :param enforce_splash: set to False will disable SPLASH_REQUIRED error
+    :param require_ring: max ring to use this view. set to None will disable authentication at all
 
     - Checks api version
     - Provides g.user and authentication with `user_token` arg
@@ -91,17 +93,17 @@ def use_sister(enforce_auth=True, enforce_splash=True):
             if g.token:
                 g.user=get_user_from_token(g.token)
 
-            if enforce_auth:
+            if require_ring is not None:
                 if g.user is None:
                     return jsonify({
                         'error': 'AUTH_REQUIRED',
                         'error_msg': '需要登录',
                         'backend': _backend_value(),
                     })
-                elif g.user.ring>=5:
+                elif g.user.ring>require_ring:
                     return jsonify({
                         'error':'SISTER_ERROR',
-                        'error_msg':'你号没了',
+                        'error_msg':'你所在的用户组不支持此操作',
                         'backend':_backend_value(),
                     })
 

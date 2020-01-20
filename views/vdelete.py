@@ -16,9 +16,9 @@ def delete_zone():
     zid=int(request.json['id'])
 
     z_o,_=g.user.zones(need_list=False)
-    z_o=z_o[None]
+    z_o=z_o.get(None,[])
     if zid not in z_o:
-        flash('课程不存在','error')
+        flash('课程不存在或没有权限','error')
         g.action_success=False
         return
 
@@ -43,9 +43,9 @@ def delete_project():
     zid=int(request.json['parent_id'])
 
     p_o,_=g.user.projects(zid,need_list=False)
-    p_o=p_o[zid]
+    p_o=p_o.get(zid,[])
     if pid not in p_o:
-        flash('类别不存在','error')
+        flash('类别不存在或没有权限','error')
         g.action_success=False
         return
 
@@ -70,9 +70,9 @@ def delete_task():
     pid=int(request.json['parent_id'])
 
     t_o,_=g.user.tasks(pid,need_list=False)
-    t_o=t_o[pid]
+    t_o=t_o.get(pid,[])
     if tid not in t_o:
-        flash('任务不存在','error')
+        flash('任务不存在或没有权限','error')
         g.action_success=False
         return
 
