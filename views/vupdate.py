@@ -95,9 +95,17 @@ def update_complete():
     assert completeness in ['todo','done','highlight','ignored'], 'invalid completeness'
 
     cur=mysql.get_db().cursor()
+
+    # set status from placeholder to active, if have permission
     cur.execute('''
         update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
     ''',[tid,g.user.uid])
-    cur.execute('''
-        replace into completes (uid, tid, completeness, update_timestamp) values (%s, %s, %s, unix_timestamp()) 
-    ''',[g.user.uid,tid,completeness])
+
+    if completeness!='todo': # write into completes
+        cur.execute('''
+            replace into completes (uid, tid, completeness, update_timestamp) values (%s, %s, %s, unix_timestamp()) 
+        ''',[g.user.uid,tid,completeness])
+    else: # or delte from it
+        cur.execute('''
+            delete from completes where uid=%s and tid=%s 
+        ''',[g.user.uid,tid])
