@@ -243,6 +243,16 @@ class User:
         ''',[pid,self.uid])
         return cur.fetchone()[0]!=0
 
+    def imported_extpids(self):
+        """ Return list of extpids that the user has already imported.
+        :return: list of extpids
+        """
+        cur=mysql.get_db().cursor()
+        cur.execute('''
+            select extpid from projects where uid=%s and extpid is not null
+        ''',[self.uid])
+        return [x[0] for x in cur.fetchall()]
+
     def build_sister_response(self):
         """ Generate value that will be passed to phoenix.
         :return: a dict

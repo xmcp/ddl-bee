@@ -79,14 +79,14 @@ def add_project():
         g.action_success=False
         return
 
-    p_o,p_li=g.user.projects(zid,need_list=True)
+    p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o.get(zid,[])
     if len(p_o)+len(names)>current_app.config['LIMIT_PROJECTS_PER_ZONE']:
         flash('类别数量超出限制','error')
         g.action_success=False
         return
 
-    already_extpids={item['_extpid'] for item in p_li.values() if item['_extpid']}
+    already_extpids=set(g.user.imported_extpids())
     for name,extpid in names:
         if extpid:
             if g.user.ring>current_app.config['MAX_RING_FOR_SHARING']:

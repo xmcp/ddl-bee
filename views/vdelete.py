@@ -50,9 +50,50 @@ def delete_project():
         return
 
     cur=mysql.get_db().cursor()
+
+    # get linked extpid
     cur.execute('''
-        delete from projects where pid=%s and uid=%s
-    ''',[pid,g.user.uid])
+        select extpid from projects where pid=%s
+    ''',[pid])
+    extpid=cur.fetchone()[0]
+
+    if extpid is None: # src project
+        cur.execute('''
+            select count(*) from projects where extpid=%s
+        ''',[pid])
+        peercnt=cur.fetchone()[0]
+
+        if peercnt==0: # no peers: safely delete
+            cur.execute('''
+                delete from projects where pid=%s and uid=%s
+            ''',[pid,g.user.uid])
+
+        else: # otherwise: only remove from current user, delete it later
+            cur.execute('''
+                update projects set uid=null, zid=null where pid=%s and uid=%s
+            ''',[pid,g.user.uid])
+            cur.execute('''
+                update tasks set uid=null where pid=%s and uid=%s
+            ''',[pid,g.user.uid])
+            # completes will be deleted after last person deletes the project and tasks are deleted
+
+    else: # imported project
+        # delete self
+        cur.execute('''
+            delete from projects where pid=%s and uid=%s
+        ''',[pid,g.user.uid])
+
+        cur.execute('''
+            select count(*) from projects where
+                (extpid=%s and pid!=%s) or /* other imported ones */
+                (pid=%s and uid is not null) /* original one that is not flagged as deletion */
+        ''',[extpid,pid,extpid])
+        peercnt=cur.fetchone()[0]
+
+        if peercnt==0: # delete src
+            cur.execute('''
+                delete from projects where pid=%s
+            ''',[extpid])
 
     p_onew=p_o[:]
     p_onew.remove(pid)

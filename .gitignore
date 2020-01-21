@@ -7,3 +7,4 @@ user_control.py
 config.py
 wsgi.ini
 splashes/__init__.py
+/static/
