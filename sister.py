@@ -17,10 +17,6 @@ import splashes
 
 SISTER_API_VER='2'
 
-NOTIFS=[
-    ['message','<b>Alpha测试期间请勿提交任何隐私或重要信息</b>，否则可能泄露或丢失。目前课程、每个课程的类别、每个类别的任务数量限制均为20。']
-]
-
 def get_git_revision():
     try:
         with open('.git/HEAD') as head:
@@ -38,7 +34,7 @@ def _backend_value():
     return {
         'version': VERSION,
         'flash_msgs': get_flashed_messages(with_categories=True),
-        'sticky_msgs': NOTIFS,
+        'sticky_msgs': current_app.config['STICKY_MSGS'],
     }
 
 def get_user_from_token(token):
