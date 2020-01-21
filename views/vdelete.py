@@ -70,7 +70,7 @@ def delete_project():
 
         else: # otherwise: only remove from current user, delete it later
             cur.execute('''
-                update projects set uid=null, zid=null where pid=%s and uid=%s
+                update projects set uid=null, zid=null, share_hash=null where pid=%s and uid=%s
             ''',[pid,g.user.uid])
             cur.execute('''
                 update tasks set uid=null where pid=%s and uid=%s
