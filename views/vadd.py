@@ -119,11 +119,20 @@ def add_task():
     INPUT:
         names: list of str
         parent_id: int
-        active: bool
+        task_due_first: int or null
+        task_due_delta: int (days) or null
     """
     names=request.json['names']
     pid=int(request.json['parent_id'])
-    active=bool(request.json['active'])
+    task_due_first=request.json['task_due_first']
+    task_due_delta=int(request.json['task_due_delta'])
+    if task_due_first is not None:
+        task_due_first=int(task_due_first)
+
+    if not 0<=task_due_delta<1000:
+        flash('截止日期间隔错误','error')
+        g.action_success=False
+        return
 
     if not g.user.check_project(pid):
         flash('类别不存在或没有权限','error')
@@ -139,10 +148,10 @@ def add_task():
 
     cur=mysql.get_db().cursor()
     t_onew=t_o
-    for name in names:
+    for idx,name in enumerate(names):
         cur.execute('''
-            insert into tasks (next_tid, name, uid, pid, status) values (null, %s, %s, %s, %s)     
-        ''',[name,g.user.uid,pid,'active' if active else 'placeholder'])
+            insert into tasks (next_tid, name, uid, pid, status, due) values (null, %s, %s, %s, 'placeholder', %s)     
+        ''',[name,g.user.uid,pid,None if task_due_first is None else (task_due_first+idx*86400*task_due_delta)])
         t_onew=t_onew+[cur.lastrowid]
 
     model.update_linkedlist(t_o,t_onew,'tasks')
