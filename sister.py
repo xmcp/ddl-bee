@@ -15,7 +15,7 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-SISTER_API_VER='2a'
+COMPATIBLE_SISTER_VER=['2b']
 
 def get_git_revision():
     try:
@@ -74,10 +74,10 @@ def use_sister(enforce_splash=True, require_ring=4):
             # check api version
 
             client_api_ver=request.args.get('sister_ver',None)
-            if client_api_ver!=SISTER_API_VER:
+            if client_api_ver not in COMPATIBLE_SISTER_VER:
                 return jsonify({
                     'error': 'SISTER_VER_MISMATCH',
-                    'error_msg': 'API版本不兼容，请尝试刷新页面',
+                    'error_msg': 'API 版本与后端 (Sister %s) 不兼容'%(', '.join(COMPATIBLE_SISTER_VER)),
                 })
 
             g.user=None
