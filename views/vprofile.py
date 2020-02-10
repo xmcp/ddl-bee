@@ -66,6 +66,20 @@ def register():
 
     raise SisterProceed()
 
+@bp.route('/profile/check_token',methods=['POST'])
+@use_sister(require_ring=None,enforce_splash=False)
+def check_token():
+    """
+    ARGS:
+        user_token -> g.token as dealed in sister
+    OUTPUT:
+        error & error_msg: as dealed in sister
+    """
+    if g.user:
+        return {}
+    else:
+        raise SisterErrorMsg('用户不存在')
+
 @bp.route('/profile/splash_callback',methods=['POST'])
 @use_sister(enforce_splash=False)
 def splash_callback():
