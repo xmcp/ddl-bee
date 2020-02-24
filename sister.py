@@ -15,7 +15,7 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['2b','2c']
+COMPATIBLE_SISTER_VER=['3']
 
 def get_git_revision():
     try:
@@ -151,7 +151,7 @@ def use_sister(enforce_splash=True, require_ring=4):
                 current_app.logger.exception('exception in wrapped handler')
                 return jsonify({
                     'error': 'BACKEND_EXCEPTION',
-                    'error_msg': '后端错误 %s %s'%(type(e),e),
+                    'error_msg': '%s %s'%(type(e),e),
                     'backend': _backend_value(),
                 })
 

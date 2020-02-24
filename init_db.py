@@ -11,6 +11,7 @@ CREATE TABLE `users` (
   `splash_index` int(11) NOT NULL,
   `remarks` text NOT NULL,
   `settings` mediumtext NOT NULL,
+  `last_refresh` bigint DEFAULT NULL,
   PRIMARY KEY (`uid`),
   UNIQUE KEY `k_user_token` (`user_token`),
   UNIQUE KEY `k_unique_id` (`unique_id`)
@@ -50,7 +51,8 @@ CREATE TABLE `tasks` (
   `uid` int,
   `pid` int DEFAULT NULL,
   `status` enum('placeholder','active') NOT NULL DEFAULT 'placeholder',
-  `due` bigint NULL DEFAULT NULL, 
+  `due` bigint DEFAULT NULL, 
+  `description` text DEFAULT NULL,
   PRIMARY KEY (`tid`),
   KEY `k_pid` (`pid`),
   KEY `k_uid` (`uid`),

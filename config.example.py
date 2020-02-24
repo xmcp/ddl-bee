@@ -9,6 +9,8 @@ JSONIFY_PRETTYPRINT_REGULAR=False
 
 SECRET_KEY=b'42'
 
+MAX_NAME_LENGTH=70 # max allowed length for task & project & zone names, should be less than varchar(_) in db
+
 LIMIT_ZONES=100
 LIMIT_PROJECTS_PER_ZONE=100
 LIMIT_TASKS_PER_PROJECT=100

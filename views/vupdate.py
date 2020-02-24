@@ -22,6 +22,11 @@ def update_zone():
     zid=int(request.json['id'])
     name=str(request.json['name'])
 
+    if len(name)>current_app.config['MAX_NAME_LENGTH']:
+        flash('名称长度超出限制','error')
+        g.action_success=False
+        return
+
     cur=mysql.get_db().cursor()
     cur.execute('''
         update zones set name=%s where zid=%s and uid=%s
@@ -42,6 +47,11 @@ def update_project():
 
     if shared and g.user.ring>current_app.config['MAX_RING_FOR_SHARING']:
         flash('你所在的用户组不能创建共享','error')
+        g.action_success=False
+        return
+
+    if len(name)>current_app.config['MAX_NAME_LENGTH']:
+        flash('名称长度超出限制','error')
         g.action_success=False
         return
 
@@ -67,6 +77,7 @@ def update_task():
         id: int
         name: str
         status: str
+        desc: str or null
         due: int or null
     """
     tid=int(request.json['id'])
@@ -74,13 +85,22 @@ def update_task():
     status=str(request.json['status'])
     assert status in ['placeholder','active'], 'invalid status'
     due=request.json['due']
+    desc=request.json['desc']
+
     if due is not None:
         due=int(due)
+    if desc is not None:
+        desc=str(desc)
+
+    if len(name)>current_app.config['MAX_NAME_LENGTH']:
+        flash('名称长度超出限制','error')
+        g.action_success=False
+        return
 
     cur=mysql.get_db().cursor()
     cur.execute('''
-        update tasks set name=%s, status=%s, due=%s where tid=%s and uid=%s
-    ''',[name,status,due,tid,g.user.uid])
+        update tasks set name=%s, status=%s, due=%s, description=%s where tid=%s and uid=%s
+    ''',[name,status,due,desc,tid,g.user.uid])
 
 @bp.route('/update/complete',methods=['POST'])
 @use_sister()
@@ -96,10 +116,11 @@ def update_complete():
 
     cur=mysql.get_db().cursor()
 
-    # set status from placeholder to active, if have permission
-    cur.execute('''
-        update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
-    ''',[tid,g.user.uid])
+    if completeness!='todo':
+        # set status from placeholder to active, if have permission
+        cur.execute('''
+            update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
+        ''',[tid,g.user.uid])
 
     if completeness!='todo': # write into completes
         cur.execute('''

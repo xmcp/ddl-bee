@@ -51,6 +51,11 @@ def add_zone():
     cur=mysql.get_db().cursor()
     z_onew=z_o
     for name in names:
+        if len(name)>current_app.config['MAX_NAME_LENGTH']:
+            flash('名称长度超出限制','error')
+            g.action_success=False
+            return
+
         cur.execute('''
             insert into zones (next_zid, name, uid) values (null, %s, %s)    
         ''',[name,g.user.uid])
@@ -105,6 +110,11 @@ def add_project():
     cur=mysql.get_db().cursor()
     p_onew=p_o
     for name,extpid in names:
+        if len(name)>current_app.config['MAX_NAME_LENGTH']:
+            flash('名称长度超出限制','error')
+            g.action_success=False
+            return
+
         cur.execute('''
             insert into projects (next_pid, name, uid, zid, extpid) values (null, %s, %s, %s, %s)    
         ''',[name,g.user.uid,zid,extpid])
@@ -149,6 +159,11 @@ def add_task():
     cur=mysql.get_db().cursor()
     t_onew=t_o
     for idx,name in enumerate(names):
+        if len(name)>current_app.config['MAX_NAME_LENGTH']:
+            flash('名称长度超出限制','error')
+            g.action_success=False
+            return
+
         cur.execute('''
             insert into tasks (next_tid, name, uid, pid, status, due) values (null, %s, %s, %s, 'placeholder', %s)     
         ''',[name,g.user.uid,pid,None if task_due_first is None else (task_due_first+idx*86400*task_due_delta)])
