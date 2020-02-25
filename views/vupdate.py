@@ -116,11 +116,10 @@ def update_complete():
 
     cur=mysql.get_db().cursor()
 
-    if completeness!='todo':
-        # set status from placeholder to active, if have permission
-        cur.execute('''
-            update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
-        ''',[tid,g.user.uid])
+    # set status from placeholder to active, if have permission
+    cur.execute('''
+        update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
+    ''',[tid,g.user.uid])
 
     if completeness!='todo': # write into completes
         cur.execute('''
