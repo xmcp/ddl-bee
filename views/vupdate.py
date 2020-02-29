@@ -121,7 +121,7 @@ def update_complete():
 
         # set status from placeholder to active, if have permission
         cur.execute('''
-            update tasks set status='active', due=null where tid=%s and uid=%s and status='placeholder'
+            update tasks set status='active' where tid=%s and uid=%s and status='placeholder'
         ''',[tid,g.user.uid])
 
         if completeness!='todo': # write into completes
