@@ -6,7 +6,7 @@ from sister import use_sister
 bp=Blueprint('refresh',__name__)
 
 @bp.route('/refresh')
-@use_sister()
+@use_sister(enforce_splash=True)
 def refresh():
     cur=mysql.get_db().cursor()
     cur.execute('''

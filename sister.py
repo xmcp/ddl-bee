@@ -50,7 +50,7 @@ def get_user_from_token(token):
     else:
         return None
 
-def use_sister(enforce_splash=True, require_ring=4):
+def use_sister(enforce_splash=False, require_ring=4):
     """ Decorator for view functions.
     SHOULE BE USED FOR EVERY VIEW FUNCTION!
     :param enforce_splash: set to False will disable SPLASH_REQUIRED error
