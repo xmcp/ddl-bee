@@ -92,7 +92,7 @@ def splash_callback():
     handin_data=request.json['handin']
 
     if g.user.splash_index!=splash_index:
-        raise SisterErrorMsg('not in current splash screen')
+        raise SisterErrorMsg('不在当前开屏页面')
     handler=splashes.SplashHandler.get_handler_by_index(splash_index)
     assert handler is not None, 'no handler for this splash'
 
