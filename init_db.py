@@ -65,9 +65,11 @@ CREATE TABLE `completes` (
   `tid` int NOT NULL,
   `completeness` enum('todo','done','highlight','ignored') NOT NULL DEFAULT 'todo',
   `update_timestamp` bigint NOT NULL,
+  `description_idx` int DEFAULT NULL,
   PRIMARY KEY (`uid`,`tid`),
   KEY `k_tid` (`tid`),
   KEY `k_uid` (`uid`),
+  KEY `k_description_idx` (`tid`, `description_idx`),
   CONSTRAINT `fk_c_tid` FOREIGN KEY (`tid`) REFERENCES `tasks` (`tid`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_c_uid` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ''',

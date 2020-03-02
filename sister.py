@@ -15,7 +15,7 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['3a']
+COMPATIBLE_SISTER_VER=['3a','3b']
 
 def get_git_revision():
     try:

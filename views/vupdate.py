@@ -11,6 +11,13 @@ def gen_share_hash():
     LENGTH=8
     return ''.join([random.choice(ALPHABET) for _ in range(LENGTH)])
 
+def str_prefix_length(a,b):
+    l=min(len(a),len(b))
+    for i in range(l):
+        if a[i]!=b[i]:
+            return i
+    return l
+
 @bp.route('/update/zone',methods=['POST'])
 @use_sister()
 def update_zone():
@@ -98,6 +105,22 @@ def update_task():
         return
 
     cur=mysql.get_db().cursor()
+
+    cur.execute('''
+        select description from tasks where tid=%s and uid=%s
+    ''',[tid,g.user.uid])
+    res=cur.fetchone()
+    if not res:
+        flash('任务不存在或没有权限','error')
+        g.action_success=False
+        return
+
+    prefix_len=str_prefix_length(res[0] or '',desc or '')
+    if prefix_len<len(res[0] or ''): # prefix gets shorter, so need to remove affected desc idx
+        cur.execute('''
+            update completes set description_idx=%s where tid=%s and description_idx>%s
+        ''',[prefix_len,tid,prefix_len])
+
     cur.execute('''
         update tasks set name=%s, status=%s, due=%s, description=%s where tid=%s and uid=%s
     ''',[name,status,due,desc,tid,g.user.uid])
@@ -124,11 +147,29 @@ def update_complete():
             update tasks set status='active' where tid=%s and uid=%s and status='placeholder'
         ''',[tid,g.user.uid])
 
-        if completeness!='todo': # write into completes
-            cur.execute('''
-                replace into completes (uid, tid, completeness, update_timestamp) values (%s, %s, %s, unix_timestamp()) 
-            ''',[g.user.uid,tid,completeness])
-        else: # or delte from it
-            cur.execute('''
-                delete from completes where uid=%s and tid=%s 
-            ''',[g.user.uid,tid])
+        # keeping description_idx same
+        cur.execute('''
+            insert into completes (uid, tid, completeness, update_timestamp) values (%s, %s, %s, unix_timestamp())
+            on duplicate key update completeness=%s, update_timestamp=unix_timestamp()
+        ''',[g.user.uid,tid,completeness,completeness])
+
+@bp.route('/update/desc_idx',methods=['POST'])
+@use_sister()
+def update_desc_idx():
+    """
+    INPUT:
+        id: int
+        desc_idx: int or null
+    """
+    tid=int(request.json['id'])
+    desc_idx=request.json['desc_idx']
+    if desc_idx is not None:
+        desc_idx=int(desc_idx)
+
+    cur=mysql.get_db().cursor()
+
+    # keeping completeness same
+    cur.execute('''
+        insert into completes (uid, tid, completeness, update_timestamp, description_idx) values (%s, %s, 'todo', unix_timestamp(), %s)
+        on duplicate key update description_idx=%s
+    ''',[g.user.uid,tid,desc_idx,desc_idx])

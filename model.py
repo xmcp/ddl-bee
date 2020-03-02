@@ -164,7 +164,7 @@ class User:
         """
         cur=mysql.get_db().cursor()
         sql='''
-            select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo'),completes.update_timestamp,description from tasks
+            select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo'),completes.update_timestamp,description,completes.description_idx from tasks
             left join completes on tasks.tid=completes.tid and completes.uid=%s
             where 1 
         '''
@@ -196,7 +196,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=['id',None,'parent_id','name','status','due','completeness','complete_timestamp','desc'] if need_list else None,
+            attrs=['id',None,'parent_id','name','status','due','completeness','complete_timestamp','desc','desc_idx'] if need_list else None,
         )
 
     def tasks_external(self,pid_map):
