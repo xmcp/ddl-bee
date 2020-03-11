@@ -133,9 +133,14 @@ def update_complete():
         ids: list of int
         completeness: str
     """
-    tids=request.json['ids']
+    tids=list(request.json['ids'])
     completeness=str(request.json['completeness'])
     assert completeness in ['todo','done','highlight','ignored'], 'invalid completeness'
+
+    if len(tids)>current_app.config['LIMIT_TASKS_PER_PROJECT']:
+        flash('任务数量超出限制','error')
+        g.action_success=False
+        return
 
     cur=mysql.get_db().cursor()
 

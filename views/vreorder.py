@@ -16,7 +16,7 @@ def reorder_zone():
     INPUT:
         order: list of int
     """
-    zids=request.json['order']
+    zids=list(request.json['order'])
 
     z_o,_=g.user.zones(need_list=False)
     z_o=z_o[None]
@@ -37,7 +37,7 @@ def reorder_project():
         order: list of int
     """
     zid=int(request.json['parent_id'])
-    pids=request.json['order']
+    pids=list(request.json['order'])
 
     p_o,_=g.user.projects(zid,need_list=False)
     p_o=p_o[zid]
@@ -58,7 +58,7 @@ def reorder_task():
         order: list of int
     """
     pid=int(request.json['parent_id'])
-    tids=request.json['order']
+    tids=list(request.json['order'])
 
     t_o,_=g.user.tasks(pid,need_list=False)
     t_o=t_o[pid]
