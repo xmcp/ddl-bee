@@ -15,7 +15,7 @@ class SisterProceed(Exception):
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['3b1']
+COMPATIBLE_SISTER_VER=['3c']
 
 def get_git_revision():
     try:
@@ -114,6 +114,7 @@ def use_sister(enforce_splash=False, require_ring=4):
                         'backend':_backend_value(),
                         'splash': {
                             'index': handler.splash_index,
+                            'name': handler.splash_name,
                             'type': handler.splash_type,
                             'handout': handler.handout(g.user.uid),
                         },

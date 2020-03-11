@@ -19,7 +19,6 @@ class SplashEULA(SplashHandler):
             self.flash('你必须同意','error')
         else:
             self.complete(uid)
-            self.flash('完成','success')
 
 SplashEULA()
 
@@ -30,6 +29,7 @@ class SplashTutorial(SplashHandler):
     def handout(self,_uid):
         return {
             'title': '新手教程',
+            'instruction_html':'<p>不存在的</p>',
             'content_html': (
                 '<p>自己琢磨去。</p>'
             ),
@@ -37,6 +37,55 @@ class SplashTutorial(SplashHandler):
 
     def handin(self,uid,_args):
         self.complete(uid)
-        self.flash('完成','success')
 
 SplashTutorial()
+
+class SplashSurveySingle(SplashHandler):
+    def __init__(self):
+        super().__init__(2,'用户调查（单选）','select_single')
+
+    def handout(self,_uid):
+        return {
+            'title': '用户调查（单选）',
+            'instruction_html':'<p>请配合完成调查</p>',
+            'content_html': '<p>请选择第二项</p>',
+            'selection': [
+                ['v1','text 1'],
+                ['v2','text 2'],
+                ['v3','text 3'],
+            ],
+            'default_selection': None,#'v1'
+        }
+
+    def handin(self,uid,args):
+        sel=args.get('selection',None)
+        self.flash('你选择了 '+sel,'info')
+        if sel=='v2':
+            self.complete(uid)
+
+SplashSurveySingle()
+
+class SplashSurveyMultiple(SplashHandler):
+    def __init__(self):
+        super().__init__(3,'用户调查（多选）','select_multiple')
+
+    def handout(self,_uid):
+        return {
+            'title': '用户调查（多选）',
+            'instruction_html':'<p>请配合完成调查</p>',
+            'content_html': '<p>请选择第二项</p>',
+            'selection': [
+                ['v1','text 1'],
+                ['v2','text 2'],
+                ['v3','text 3'],
+            ],
+            'default_selection': ['v1','v2','v3'],
+        }
+
+    def handin(self,uid,args):
+        sel=args.get('selection',None)
+        self.flash('you selected '+str(sel),'info')
+        if sel==['v2']:
+            self.complete(uid)
+
+SplashSurveyMultiple()
