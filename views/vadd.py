@@ -165,8 +165,8 @@ def add_task():
             return
 
         cur.execute('''
-            insert into tasks (next_tid, name, uid, pid, status, due) values (null, %s, %s, %s, 'placeholder', %s)     
-        ''',[name,g.user.uid,pid,None if task_due_first is None else (task_due_first+idx*86400*task_due_delta)])
+            insert into tasks (next_tid, name, uid, pid, status, due) values (null, %s, %s, %s, %s, %s)     
+        ''',[name,g.user.uid,pid,'placeholder' if len(names)>1 else 'active',None if task_due_first is None else (task_due_first+idx*86400*task_due_delta)])
         t_onew=t_onew+[cur.lastrowid]
 
     model.update_linkedlist(t_o,t_onew,'tasks')
