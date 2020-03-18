@@ -33,3 +33,15 @@ def check_registration_code(regcode,userinfo):
             'ring': 3,
             'splash_index': None,
         }
+
+def sticky_msg(user,endpoint):
+    """ Put sticky msgs for the given user.
+
+    :param user: a model.User object (if logged in) or None
+    :param endpoint: flask.request.endpoint for current request
+    :return: a list of [category, content_html]
+    """
+
+    return [
+        ['message','<b>Hey %s</b> you are browsing %s'%(user.uid if user else '???',endpoint)]
+    ]

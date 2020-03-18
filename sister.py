@@ -12,10 +12,12 @@ class SisterErrorMsg(Exception):
 class SisterProceed(Exception):
     pass
 
+import user_control
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['3c']
+COMPATIBLE_SISTER_VER=['3d']
+CACHE_DATA_VER='3d'
 
 def get_git_revision():
     try:
@@ -34,7 +36,8 @@ def _backend_value():
     return {
         'version': VERSION,
         'flash_msgs': get_flashed_messages(with_categories=True),
-        'sticky_msgs': current_app.config['STICKY_MSGS'],
+        'sticky_msgs': user_control.sticky_msg(g.user,request.endpoint),
+        'cache_data_ver': CACHE_DATA_VER,
     }
 
 def get_user_from_token(token):
