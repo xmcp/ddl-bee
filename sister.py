@@ -16,7 +16,7 @@ import user_control
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['3d']
+COMPATIBLE_SISTER_VER=['3c','3d']
 CACHE_DATA_VER='3d'
 
 def get_git_revision():
