@@ -24,16 +24,10 @@ SplashEULA()
 
 class SplashTutorial(SplashHandler):
     def __init__(self):
-        super().__init__(1,'新手教程','announce')
+        super().__init__(1,'新手教程','tutorial_1')
 
     def handout(self,_uid):
-        return {
-            'title': '新手教程',
-            'instruction_html':'<p>不存在的</p>',
-            'content_html': (
-                '<p>自己琢磨去。</p>'
-            ),
-        }
+        return {}
 
     def handin(self,uid,_args):
         self.complete(uid)
