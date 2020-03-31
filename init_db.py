@@ -35,10 +35,12 @@ CREATE TABLE `projects` (
   `zid` int,
   `extpid` int DEFAULT NULL,
   `share_hash` varchar(60) DEFAULT NULL,
+  `share_name` varchar(80) DEFAULT NULL,
   PRIMARY KEY (`pid`),
   KEY `k_zid` (`zid`),
   KEY `k_uid` (`uid`),
   UNIQUE KEY `k_share_hash` (`share_hash`),
+  FULLTEXT KEY `k_share_name` (`share_name`) WITH PARSER ngram,
   CONSTRAINT `fk_p_uid` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_p_zid` FOREIGN KEY (`zid`) REFERENCES `zones` (`zid`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_p_extpid` FOREIGN KEY (`extpid`) REFERENCES `projects` (`pid`) ON DELETE SET NULL ON UPDATE CASCADE

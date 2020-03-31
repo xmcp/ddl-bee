@@ -12,7 +12,6 @@ See front-end part at https://github.com/pkuhelper-web/phoenix
 4. Fill in app configurations in `config.example.py`:
    - `MYSQL_*`: input your database connection credential
    - `SECRET_KEY`: generate a random, secure string
-   - `STICKY_MSGS`: notifications that will be shown to all users
 5. Implement your token-based account system and registration system in `user_control.example.py`
 6. Fill in uWSGI configurations in `wsgi.example.ini`
 7. Fill in splash screen configurations in `splashes/__init__.example.py`

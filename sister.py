@@ -16,8 +16,8 @@ import user_control
 import model
 import splashes
 
-COMPATIBLE_SISTER_VER=['3d1']
-CACHE_DATA_VER='3d'
+COMPATIBLE_SISTER_VER=['4']
+CACHE_DATA_VER='4'
 
 def get_git_revision():
     try:
@@ -53,11 +53,12 @@ def get_user_from_token(token):
     else:
         return None
 
-def use_sister(enforce_splash=False, require_ring=4):
+def use_sister(enforce_splash=False, require_ring=4, may_fallback=True):
     """ Decorator for view functions.
     SHOULE BE USED FOR EVERY VIEW FUNCTION!
     :param enforce_splash: set to False will disable SPLASH_REQUIRED error
     :param require_ring: max ring to use this view. set to None will disable authentication at all
+    :param may_fallback: may return model data as default response
 
     - Checks api version
     - Provides g.user and authentication with `user_token` arg
@@ -131,7 +132,7 @@ def use_sister(enforce_splash=False, require_ring=4):
                 # check for default sister response
 
                 if res is None:
-                    if g.user:
+                    if g.user and may_fallback:
                         res=g.user.build_sister_response()
                     else:
                         raise Exception('no available response')

@@ -137,7 +137,7 @@ class User:
         """
         cur=mysql.get_db().cursor()
         sql='''
-            select pid,next_pid,zid,name,extpid,share_hash from projects where uid=%s
+            select pid,next_pid,zid,name,extpid,share_hash,share_name from projects where uid=%s
         '''
 
         if zid is None:
@@ -152,7 +152,7 @@ class User:
             idx_id=0,
             idx_next=1,
             idx_group=2,
-            attrs=['id',None,'parent_id','name','_extpid','share_hash'] if need_list else None,
+            attrs=['id',None,'parent_id','name','_extpid','share_hash','share_name'] if need_list else None,
         )
 
     def tasks(self,pid=None,*,need_list=True,bypass_permission=False):

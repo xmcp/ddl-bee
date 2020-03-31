@@ -47,10 +47,14 @@ def update_project():
         id: int
         name: str
         shared: bool
+        share_name: str
     """
     pid=int(request.json['id'])
     name=str(request.json['name'])
     shared=bool(request.json['shared'])
+    share_name=request.json['share_name']
+    if share_name is not None:
+        share_name=str(share_name)
 
     if shared and g.user.ring>current_app.config['MAX_RING_FOR_SHARING']:
         flash('你所在的用户组不能创建共享','error')
@@ -67,13 +71,19 @@ def update_project():
         update projects set name=%s where pid=%s and uid=%s
     ''',[name,pid,g.user.uid])
 
-    if shared: # gen share hash if not already shared
+    if shared:
+        # gen share hash if not already shared
         cur.execute('''
-            update projects set share_hash=%s where pid=%s and uid=%s and share_hash is null
+            update projects set share_hash=%s where pid=%s and uid=%s and extpid is null and share_hash is null
         ''',[gen_share_hash(),pid,g.user.uid])
-    else: # remove share hash
+        # update share name
         cur.execute('''
-            update projects set share_hash=null where pid=%s and uid=%s
+            update projects set share_name=%s where pid=%s and uid=%s and extpid is null
+        ''',[share_name,pid,g.user.uid])
+    else:
+        # clear share hash and share name
+        cur.execute('''
+            update projects set share_hash=null, share_name=null where pid=%s and uid=%s
         ''',[pid,g.user.uid])
 
 @bp.route('/update/task',methods=['POST'])

@@ -100,7 +100,7 @@ def add_project():
                 return
 
             if extpid in already_extpids:
-                flash(name+'：不能重复添加分享','error')
+                flash(name+'：已经添加过了','error')
                 g.action_success=False
                 return
             else:
@@ -170,3 +170,49 @@ def add_task():
         t_onew=t_onew+[cur.lastrowid]
 
     model.update_linkedlist(t_o,t_onew,'tasks')
+
+@bp.route('/market/search_project',methods=['POST'])
+@use_sister(may_fallback=False,require_ring=3)
+def market_search_project():
+    """
+    INPUT:
+        term: str
+    OUTPUT:
+        error: str or null
+        error_msg: str if error occurs
+        result: list of {name,share_hash,pid}
+        tasks: list of tasks
+    """
+
+    term=str(request.json['term'])
+
+    if not term:
+        raise SisterErrorMsg('请输入搜索词')
+    if len(term)<2:
+        raise SisterErrorMsg('请输入至少两个字')
+
+    cur=mysql.get_db().cursor()
+    cur.execute('''
+        select name,share_hash,share_name,pid from projects where match(share_name) against (%s in natural language mode) and share_hash is not null limit 0,25
+    ''',[term])
+
+    res=[{
+        'name': name,
+        'share_hash': ''+share_hash, # will intentionally die here if share_hash is None
+        'share_name': share_name,
+        'pid': pid,
+    } for name,share_hash,share_name,pid in cur.fetchall()]
+
+    pids=[r['pid'] for r in res]
+    if pids:
+        tasks_o,tasks_li=g.user.tasks(pids,bypass_permission=True)
+    else:
+        tasks_o=[]
+        tasks_li={}
+
+    return {
+        'error': None,
+        'result': res,
+        'tasks_o': tasks_o,
+        'tasks_li': tasks_li,
+    }
