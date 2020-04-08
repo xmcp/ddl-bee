@@ -192,9 +192,14 @@ def market_search_project():
         raise SisterErrorMsg('请输入至少两个字')
 
     cur=mysql.get_db().cursor()
-    cur.execute('''
-        select name,share_hash,share_name,pid from projects where match(share_name) against (%s in natural language mode) and share_hash is not null limit 0,25
-    ''',[term])
+    if g.user.ring==0 and term=='.*':
+        cur.execute('''
+            select name,share_hash,share_name,pid from projects where share_hash is not null order by pid desc limit 0,50
+        ''')
+    else:
+        cur.execute('''
+            select name,share_hash,share_name,pid from projects where match(share_name) against (%s in natural language mode) and share_hash is not null limit 0,25
+        ''',[term])
 
     res=[{
         'name': name,
@@ -205,7 +210,7 @@ def market_search_project():
 
     pids=[r['pid'] for r in res]
     if pids:
-        tasks_o,tasks_li=g.user.tasks(pids,bypass_permission=True)
+        tasks_o,tasks_li=g.user.tasks(pids,bypass_permission=True,need_completes=False)
     else:
         tasks_o=[]
         tasks_li={}

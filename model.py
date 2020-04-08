@@ -155,20 +155,29 @@ class User:
             attrs=['id',None,'parent_id','name','_extpid','share_hash','share_name'] if need_list else None,
         )
 
-    def tasks(self,pid=None,*,need_list=True,bypass_permission=False):
+    def tasks(self,pid=None,*,need_list=True,bypass_permission=False,need_completes=True):
         """ Get tasks and their ordering.
         :param pid: int or list (for multiple). specify project id to retrive, None to retrive all
         :param need_list: False if second ret val is unnecessary (will return None)
         :param bypass_permission: use with `pid`. set to True to remove limit of only fetching tasks of current user
+        :param need_completes: False to skip joining with completes (and always return empty completeness)
         :return: {pid: [tid, ...]}, {tid: {'name','id','status','due'...}, ...}
         """
         cur=mysql.get_db().cursor()
-        sql='''
-            select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo'),completes.update_timestamp,description,completes.description_idx from tasks
-            left join completes on tasks.tid=completes.tid and completes.uid=%s
-            where 1 
-        '''
-        sql_args=[g.user.uid]
+
+        if need_completes:
+            sql='''
+                select tasks.tid,next_tid,pid,name,status,due,ifnull(completeness,'todo'),completes.update_timestamp,description,completes.description_idx from tasks
+                left join completes on tasks.tid=completes.tid and completes.uid=%s
+                where 1 
+            '''
+            sql_args=[g.user.uid]
+        else:
+            sql='''
+                select tid,next_tid,pid,name,status,due,'todo',null,description,null from tasks
+                where 1 
+            '''
+            sql_args=[]
 
         if bypass_permission and pid is None:
             raise ValueError('bypassing permission without pid')
