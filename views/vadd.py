@@ -221,3 +221,88 @@ def market_search_project():
         'tasks_o': tasks_o,
         'tasks_li': tasks_li,
     }
+
+IMPORT_DATA_VERSION='4'
+
+@bp.route('/add/whole_import',methods=['POST'])
+@use_sister(may_fallback=False)
+def whole_import():
+    """
+    INPUT:
+        data: json object (same format as model output)
+    OUTPUT:
+        error: str or null
+    """
+    data=request.json['data']
+    if data['backend']['cache_data_ver']!=IMPORT_DATA_VERSION:
+        return {'error': '版本不匹配，只支持 %s 但数据版本为 %s'%(IMPORT_DATA_VERSION,data['backend']['cache_data_ver'])}
+    if data['error']:
+        return {'error': '数据有错误'}
+
+    db=mysql.get_db()
+    cur=db.cursor()
+
+    z_o,_=g.user.zones(need_list=False)
+    z_o=z_o.get(None,[])
+    if len(z_o)+len(data['zone_order'])>current_app.config['LIMIT_ZONES']:
+        return {'error': '课程数量超出限制'}
+    if len(z_o)>=len(data['zone_order']): # prevent duplicate import
+        return {'error': '您的账户已有数据，请删除现有课程后再导入'}
+
+    def isinstance_or_null(x,c):
+        return isinstance(x,c) or x is None
+
+    next_zid=None
+    for json_zid in data['zone_order'][::-1]:
+        zone=data['zone'][str(json_zid)]
+        if not isinstance(zone['name'],str) or len(zone['name'])>current_app.config['MAX_NAME_LENGTH']:
+            return {'error': '名称长度超出限制'}
+        if len(zone['project_order'])>current_app.config['LIMIT_PROJECTS_PER_ZONE']:
+            return {'error': '类别数量超出限制'}
+
+        cur.execute('''
+            insert into zones (next_zid,name,uid) values (%s,%s,%s)
+        ''',[next_zid,zone['name'],g.user.uid])
+        db_zid=cur.lastrowid
+        next_zid=db_zid
+
+        next_pid=None
+        for json_pid in zone['project_order'][::-1]:
+            proj=data['project'][str(json_pid)]
+            if not isinstance(proj['name'],str) or len(proj['name'])>current_app.config['MAX_NAME_LENGTH']:
+                return {'error': '名称长度超出限制'}
+            if len(proj['task_order'])>current_app.config['LIMIT_TASKS_PER_PROJECT']:
+                return {'error': '任务数量超出限制'}
+
+            cur.execute('''
+                insert into projects (next_pid,name,uid,zid) values (%s,%s,%s,%s)
+            ''',[next_pid,proj['name'],g.user.uid,db_zid])
+            db_pid=cur.lastrowid
+            next_pid=db_pid
+
+            next_tid=None
+            for json_tid in proj['task_order'][::-1]:
+                task=data['task'][str(json_tid)]
+                if not isinstance(task['name'],str) or len(task['name'])>current_app.config['MAX_NAME_LENGTH']:
+                    return {'error': '名称长度超出限制'}
+                if task['completeness'] not in ['todo','done','highlight','ignored']:
+                    return {'error': '任务完成状态无效'}
+                if task['status'] not in ['placeholder','active']:
+                    return {'error': '任务布置状态无效'}
+                if not isinstance_or_null(task['desc'],str) or not isinstance_or_null(task['desc_idx'],int):
+                    return {'error': '任务备注无效'}
+                if not isinstance_or_null(task['due'],int):
+                    return {'error': '任务截止时间无效'}
+
+                cur.execute('''
+                    insert into tasks (next_tid, name, uid, pid, status, due, description) values (%s,%s,%s,%s,%s,%s,%s)
+                ''',[next_tid,task['name'],g.user.uid,db_pid,task['status'],task['due'],task['desc']])
+                db_tid=cur.lastrowid
+                next_tid=db_tid
+
+                if task['completeness']!='todo' or task['desc_idx']:
+                    cur.execute('''
+                        insert into completes (uid, tid, completeness, update_timestamp, description_idx) values (%s,%s,%s,unix_timestamp(),%s)
+                    ''',[g.user.uid,db_tid,task['completeness'],task['desc_idx']])
+
+    return {'error': None}
